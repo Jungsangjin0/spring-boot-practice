@@ -1,5 +1,9 @@
 # spring-boot-practice
 
+- spring boot
+- gradle
+- thymeleaf
+- mybatis
 
 
 # 2021-07-02
