@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+<mapper namespace="com.sj.board.repository.BoardMapper">
+
+	<resultMap id="boardList" type="com.sj.board.dto.BoardDTO">
+		<id column="ID" property="number"/>
+		<result column="TITLE" property="title"/>
+		<result column="CONTENT" property="content"/>
+		<result column="WRITER" property="writer"/>
+		<result column="CNT" property="cnt"/>
+		<result column="BOARD_LEVEL" property="boardLevel"/>
+		<result column="REPLY" property="reply"/>
+		<result column="STATUS" property="status"/>
+		<result column="MODIFY_DATE" property="modifyDate"/>
+	</resultMap>
+	
+	<sql id="boardInfo">
+		  ID
+		 , TITLE
+		 , CONTENT
+		 , WRITER
+		 , CNT
+		 , MODIFY_DATE
+	</sql>
+
+	<select id="selectList" resultMap="boardList" parameterType="com.sj.board.dto.BoardDTO">
+		SELECT 
+			  A.RNUM
+			   ,A.ID
+		 , A.TITLE
+		 , A.CONTENT
+		 , A.WRITER
+		 , A.CNT
+		 , A.MODIFY_DATE
+		FROM 
+		(
+		 SELECT 
+			   ROWNUM AS RNUM
+			    ,B.ID
+		 , B.TITLE
+		 , B.CONTENT
+		 , B.WRITER
+		 , B.CNT
+		 , B.MODIFY_DATE
+		 FROM(SELECT
+		  C.ID
+		 , C.TITLE
+		 , C.CONTENT
+		 , C.WRITER
+		 , C.CNT
+		 , C.MODIFY_DATE
+			  FROM BOARD C
+			  WHERE C.BOARD_LEVEL = 0
+			  AND C.STATUS = 'Y'
+			  ORDER BY C.ID DESC
+			  ) B
+	     )A
+	     WHERE A.RNUM BETWEEN #{startRow} AND #{endRow}
+	</select>
+	
+	
+	<insert id="insertBoard" parameterType="com.sj.board.dto.BoardDTO">
+		insert into board(
+				id,
+				title,
+				content,
+				writer
+				)
+				values(
+				board_seq.nextval,
+				#{title},
+				#{content},
+				#{writer}
+				)
+	</insert>
+	
+	<update id="boardCount" parameterType="_long">
+		UPDATE BOARD
+		SET CNT = (SELECT CNT FROM BOARD WHERE ID = #{number}) + 1
+		WHERE ID = #{number}
+	</update>
+	
+	
+	<select id="selectById" parameterType="_long" resultMap="boardList">
+		SELECT
+			<include refid="boardInfo"/>
+		FROM BOARD
+		WHERE BOARD_LEVEL = 0
+		AND STATUS = 'Y'
+		AND ID = #{number}
+	</select>
+
+	<update id="updateById" parameterType="com.sj.board.dto.BoardDTO">
+		UPDATE BOARD
+		<set>
+			<if test="title != null and title != ''">
+				title = #{title},			
+			</if>
+			<if test="content != null and content != ''">
+				content = #{content}
+			</if>
+		</set>
+		WHERE ID = #{number}
+	</update>	
+	
+	
+	<update id="deleteById" parameterType="_long">
+		UPDATE BOARD
+		<set>
+			<if test="number != null and number != ''">
+				STATUS = 'N'
+			</if>
+		</set>
+		WHERE ID = #{number}
+	</update>
+
+
+	<delete id="deleteBoard">
+		DELETE BOARD
+		WHERE MODIFY_DATE > ADD_MONTHS(SYSDATE , 24)  
+	</delete>
+	
+	
+	<select id="selectCount" resultType="_int">
+		select
+			  count(*)
+		from board
+		where status = 'Y'
+		and board_level = 0		
+	</select>
+</mapper>

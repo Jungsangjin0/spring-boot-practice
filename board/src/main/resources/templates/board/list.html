@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+
+<style type="text/css">
+tbody>tr:hover {
+	background: rgb(200, 200, 200);
+	cursor: pointer;
+}
+
+#home:hover {
+	cursor: pointer;
+}
+</style>
+</head>
+<body>
+	<h1 th:text="@{list page}" style="text-align: center;" th:id="home"></h1>
+
+	<div>
+		<table
+			style="text-align: center; width: 1200px; margin: 0 auto; margin-top: 100px; font-size: 24px;">
+			<colgroup>
+				<col width="10%">
+				<col width="20%">
+				<col width="30%">
+				<col width="10%">
+				<col width="15%">
+			</colgroup>
+			<thead th:classappend="@{list-thead}">
+				<th th:classappend="number">번호</th>
+				<th th:classappend="title">제목</th>
+				<th th:classappend="content">내용</th>
+				<th th:classappend="writer">작성자</th>
+				<th th:classappend="cnt">조회수</th>
+				<th th:classappend="date">작성일</th>
+			</thead>
+			<tbody th:classappend="@{list-tbody}">
+				<th:block th:test="${!empty list and !(list eq '')}">
+					<tr th:each="board, index : ${list}">
+						<td th:text="${index.index + 1 + (pageInfo.limit * (pageInfo.pageNo - 1))}"></td>
+						<td th:text="${board.title}"></td>
+						<td th:text="${board.content}"></td>
+						<td th:text="${board.writer}"></td>
+						<td th:text="${board.cnt}"></td>
+						<td th:text="${board.modifyDate}"></td>
+						<input type="hidden" th:name="id-test" th:value=${board.number} />
+					</tr>
+				</th:block>
+			</tbody>
+		</table>
+		<div style="text-align: center; margin-top: 70px;">
+			<button th:disabled="${pageInfo.pageNo <= 1}"
+			th:id="${pageInfo.pageNo <= 1 ? '' : 'startPage'}"><<</button>
+			
+			<th:block th:if="${pageInfo.pageNo <= 1}">
+				<button disabled><</button>
+			</th:block>
+			<th:block th:unless="${pageInfo.pageNo <= 1}">
+				<button th:id="prePage"><</button>
+			</th:block>
+			<button th:each="p : ${#numbers.sequence(pageInfo.startPage, pageInfo.endPage)}" th:text="${p}"
+					th:disabled="${p == pageInfo.pageNo}"
+					th:classappend="${p == pageInfo.pageNo ? '' : 'paging-button'}"></button>
+					
+			<button th:id="${pageInfo.pageNo >= pageInfo.maxPage ? '' : 'nextPage'}"
+				th:disabled="${pageInfo.pageNo >= pageInfo.maxPage}"
+			>></button>
+			<button th:disabled="${pageInfo.pageNo >= pageInfo.maxPage}"
+			th:id="${pageInfo.pageNo >= pageInfo.maxPage ? '' : 'endPage'}">>></button>
+		</div>
+	</div>
+
+	<div
+		th:if="${session.user != null and not #strings.equals(session.user, '')}"
+		style="float: right; margin-right: 100px;">
+		<h1 th:text="@{글쓰기}"></h1>
+		<button th:id="@{write}" th:text="@{작성}" th:type="button"></button>
+	</div>
+</body>
+</html>
+<script
+	src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script th:inline="javascript">
+	$(function(){
+		const context =  /*[[@{/}]]*/	
+		
+		$("#write").on("click", function(){
+			location.href = context + "write"
+		});
+		
+		$(".list-tbody > tr").on("click", function(){
+			location.href=context + "detail/" + $(this).children(":last-child").val();
+		})		
+		
+		
+		$("#home").on("click", function(){
+			location.href = context;
+		})
+		
+		$(".list-thead th").on("click", function(){
+			console.log($(this).text());
+			let keyword = $(this).attr("class");
+			
+			location.href = context + "list?" + keyword;			
+		})
+		
+		
+		
+		$("#startPage").on("click", function(){
+			location.href = context + "list?currentPage=1";
+		})
+		
+		$("#prePage").on("click", function(){
+			location.href = context + "list?currentPage=" + ([[${pageInfo.pageNo}]] - 1);
+		})
+		
+		$("#endPage").on("click", function(){
+			location.href = context + "list?currentPage=" + '[[${pageInfo.maxPage}]]';
+		})
+		
+		$("#nextPage").on("click", function(){
+			location.href = context + "list?currentPage=" + '[[${pageInfo.pageNo} + 1]]';
+		})
+		
+		
+		$(".paging-button").on("click", function(){
+			let pageNumber = $(this).text();
+			location.href = context +"list?currentPage=" + pageNumber; 
+		})
+	});
+</script>

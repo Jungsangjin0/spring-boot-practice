@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+</head>
+<body>
+
+
+<h1 th:text="@{제목 : } + '  ' + ${board.title}"></h1>
+
+<h1 th:text="@{작성자 : } + ' '  + ${board.writer}"></h1>
+
+<th:block th:if="${#strings.isEmpty(board.content) and #strings.equals(board.content, '')}">
+	<h1 th:text="@{내용없음}"></h1>
+</th:block>
+<th:block th:unless="${#strings.isEmpty(board.content) and #strings.equals(board.content, '')}">
+<h1 th:text="@{내용 : } + ' ' + ${board.content}"></h1>
+</th:block>
+
+<th:block th:if="${session.user != null and (not #strings.equals(session.user, ''))}">
+	<th:block th:if="${#strings.equals(session.user.id, board.writer)}">
+		<button th:type="@{button}" th:classappend="@{modify}" th:text="@{수정하기}"></button>
+		<button th:type="@{button}" th:classappend="@{delete}" th:text="@{삭제하기}"></button>
+	</th:block>
+</th:block>
+
+<button th:type="button" th:id="all-list" th:text="전체목록"/>
+</body>
+</html>
+
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script th:inline="javascript">
+	$(function(){
+		const context =  /*[[@{/}]]*/	
+		
+		$("#all-list").on("click", function(){
+			location.href= context + "list";
+		})
+		
+		
+		$(".modify").on("click", function(){
+		
+			location.href= context +"modify/"+ "[[__${number}__]]";	
+		});
+		
+		$(".delete").on("click", function(){
+			
+			if(confirm("삭제하시겠습니까?")) {
+				
+				let data = {
+					number : "[[__${number}__]]",
+				}
+				
+				$.ajax({
+					url : context + "delete",
+					type : "post",
+					data : {number : "[[__${number}__]]"},
+					dataType : "json",
+					success : function(data) {
+						if(data == 1) {
+							alert("삭제되었습니다");
+							location.replace("../list");
+						}else {
+							alert("오류로 인해 삭제에 실패하였습니다");
+						}
+						
+					},
+					error : function(err) {
+						alert("삭제에 실패했습니다");
+					}
+				});
+				
+			} else {
+				console.log("reject");
+			}
+		});
+		
+		
+	});
+</script>
